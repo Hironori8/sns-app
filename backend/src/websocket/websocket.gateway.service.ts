@@ -35,6 +35,18 @@ interface PostLikedData {
   isLiked: boolean;
 }
 
+interface CommentData {
+  id: number;
+  postId: number;
+  content: string;
+  user: {
+    id: number;
+    username: string;
+    displayName: string;
+  };
+  createdAt: Date;
+}
+
 interface TypingData {
   userId: number;
   username: string;
@@ -69,10 +81,26 @@ export class WebsocketGatewayService implements OnGatewayInit, OnGatewayConnecti
     private authService: AuthService,
     private websocketService: WebSocketService,
     private configService: ConfigService,
+    private notificationService: WebSocketNotificationService,
   ) {}
 
   afterInit(server: Server) {
     this.logger.log('WebSocket Gateway initialized');
+    
+    // サーバーが確実に設定されていることを確認
+    if (!this.server) {
+      this.server = server;
+      this.logger.log('Server instance manually set in afterInit');
+    }
+    
+    // サーバーの状態をログに出力
+    this.logger.log(`Server status: ${this.server ? 'Available' : 'Not Available'}`);
+    
+    // 直接通知サービスにサーバーインスタンスを設定
+    if (this.server) {
+      this.notificationService.setServer(this.server);
+      this.logger.log('Notification service directly initialized with server instance');
+    }
   }
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -180,6 +208,34 @@ export class WebsocketGatewayService implements OnGatewayInit, OnGatewayConnecti
   async handleGetOnlineUsers(@ConnectedSocket() client: AuthenticatedSocket) {
     const onlineUsers = await this.websocketService.getOnlineUsers();
     client.emit('users:online', onlineUsers);
+  }
+
+  // Like-related event handlers
+  @SubscribeMessage('post:liked')
+  async handlePostLiked(@ConnectedSocket() client: AuthenticatedSocket, payload: PostLikedData) {
+    // Broadcast the like event to all clients
+    this.server.emit('post:liked', payload);
+  }
+
+  @SubscribeMessage('post:unliked')
+  async handlePostUnliked(@ConnectedSocket() client: AuthenticatedSocket, payload: PostLikedData) {
+    // Broadcast the unlike event to all clients
+    this.server.emit('post:unliked', payload);
+  }
+  
+  // Comment-related event handlers
+  @SubscribeMessage('comment:created')
+  async handleCommentCreated(@ConnectedSocket() client: AuthenticatedSocket, payload: CommentData) {
+    console.log('Received comment:created event:', payload);
+    // Broadcast the comment event to all clients
+    this.server.emit('comment:created', payload);
+  }
+  
+  @SubscribeMessage('comment:deleted')
+  async handleCommentDeleted(@ConnectedSocket() client: AuthenticatedSocket, payload: { id: number; postId: number }) {
+    console.log('Received comment:deleted event:', payload);
+    // Broadcast the comment deletion event to all clients
+    this.server.emit('comment:deleted', payload);
   }
 
   private extractTokenFromCookie(cookieHeader?: string): string | null {

@@ -10,12 +10,12 @@ export interface User {
 export interface Post {
   id: number;
   content: string;
-  authorId: number;
+  authorId?: number; // Backend might not include this directly
   createdAt: string;
   updatedAt: string;
-  author?: User;
+  author: User; // Make this required since backend always includes it
   isLiked?: boolean;
-  likeCount?: number;
+  likeCount: number; // Make required since backend always includes it
 }
 
 export interface Like {
@@ -60,4 +60,39 @@ export interface TypingData {
   username: string;
   displayName: string;
   isTyping: boolean;
+}
+
+export interface PostLikedData {
+  postId: number;
+  userId: number;
+  username: string;
+  likeCount: number;
+  isLiked: boolean;
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  postId: number;
+  userId: number;
+  createdAt: string;
+  updatedAt?: string;
+  user: User;
+}
+
+export interface CommentData {
+  id: number;
+  postId: number;
+  content: string;
+  user: {
+    id: number;
+    username: string;
+    displayName: string;
+  };
+  createdAt: Date;
+}
+
+export interface CommentDeletedData {
+  id: number;
+  postId: number;
 }

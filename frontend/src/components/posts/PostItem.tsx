@@ -35,7 +35,7 @@ export default function PostItem({ post, onLike, onUnlike, onDelete }: PostItemP
     const [opened, { open: openModal, close: closeModal }] = useDisclosure(false);
     const { user } = useAuthStore();
 
-    const isAuthor = user?.id === post.authorId;
+    const isAuthor = user?.id === post.author?.id;
     const formattedDate = formatDistanceToNow(new Date(post.createdAt), { locale: ja, addSuffix: true });
 
     const handleLikeToggle = async () => {

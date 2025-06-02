@@ -24,6 +24,7 @@ interface PostsState {
   // 「いいね」操作
   likePost: (postId: number) => Promise<boolean>;
   unlikePost: (postId: number) => Promise<boolean>;
+  updatePostLikeStatus: (postId: number, isLiked: boolean, likeCount: number) => void;
   
   // リセット
   resetPosts: () => void;
@@ -169,6 +170,28 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       set({ error: error.message || 'いいねの取り消しに失敗しました' });
       return false;
     }
+  },
+
+  // WebSocket経由でのいいね状態更新
+  updatePostLikeStatus: (postId: number, isLiked: boolean, likeCount: number) => {
+    // デバッグログ
+    console.log(`Updating post ${postId} like status: isLiked=${isLiked}, count=${likeCount}`);
+    
+    const postsWithTarget = get().posts.some(post => post.id === postId);
+    if (!postsWithTarget) {
+      console.log(`Post ${postId} not found in current state, skipping update`);
+      return;
+    }
+    
+    set(state => ({
+      posts: state.posts.map(post => {
+        if (post.id === postId) {
+          console.log(`Updating post in state: ${post.id}`);
+          return { ...post, isLiked, likeCount };
+        }
+        return post;
+      }),
+    }));
   },
 
   // 投稿リストをリセット

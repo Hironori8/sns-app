@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { OnlineUsersData, TypingData } from '../types';
+import { OnlineUsersData, TypingData, PostLikedData, CommentData, CommentDeletedData } from '../types';
 
 let socket: Socket | null = null;
 
@@ -52,6 +52,32 @@ export const onTypingStop = (callback: (data: TypingData) => void) => {
   if (!socket) return () => {};
   socket.on('typing:stop', callback);
   return () => socket?.off('typing:stop', callback);
+};
+
+// いいね関連のリスナー
+export const onPostLiked = (callback: (data: PostLikedData) => void) => {
+  if (!socket) return () => {};
+  socket.on('post:liked', callback);
+  return () => socket?.off('post:liked', callback);
+};
+
+export const onPostUnliked = (callback: (data: PostLikedData) => void) => {
+  if (!socket) return () => {};
+  socket.on('post:unliked', callback);
+  return () => socket?.off('post:unliked', callback);
+};
+
+// コメント関連のリスナー
+export const onCommentCreated = (callback: (data: CommentData) => void) => {
+  if (!socket) return () => {};
+  socket.on('comment:created', callback);
+  return () => socket?.off('comment:created', callback);
+};
+
+export const onCommentDeleted = (callback: (data: CommentDeletedData) => void) => {
+  if (!socket) return () => {};
+  socket.on('comment:deleted', callback);
+  return () => socket?.off('comment:deleted', callback);
 };
 
 // Socket.IOエミッター関数
